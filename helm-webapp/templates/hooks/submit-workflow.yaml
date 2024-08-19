@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: app-notification-job-
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+      - name: app-notification
+        image: curlimages/curl
+        command:
+          - "sh"
+          - "-c"
+          - |
+            # Example step: Fetch some data from a random site
+            curl -s "https://jsonplaceholder.typicode.com/posts/1" > /tmp/data.json
+
+            # Print fetched data to logs
+            cat /tmp/data.json
+
+            # Send a notification to Slack
+            curl -X POST -H 'Content-type: application/json' --data-urlencode 'payload={"channel": "#somechannel", "username": "hello", "text": "Fetch completed", "icon_emoji": ":ghost:"}' "https://hooks.slack.com/services/..."
+
+      restartPolicy: Never
+  backoffLimit: 2
